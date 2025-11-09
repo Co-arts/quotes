@@ -66,8 +66,10 @@
   <button id="connectBtn">Connect Wallet</button>
   <div id="text">Click anywhere to begin ✨ (cost: 0.0001 ETH)</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.2/dist/ethers.umd.min.js"></script>
-  <script>
+  <!--  ✅ Using ES Module version of Ethers (CSP safe) -->
+  <script type="module">
+    import { ethers } from "https://cdn.jsdelivr.net/npm/ethers@6.9.2/+esm";
+
     // ===== CONFIG =====
     const RECEIVE_ADDRESS = "0x844b9e33ffc8cae3081c9ec94117e60a35ac9185";
     const COST = "0.0001"; // ETH per click
@@ -87,7 +89,6 @@
       "Poppins","Raleway","Lato","Montserrat","Playfair Display","Dancing Script"
     ];
 
-    // === QUOTES ===
     const messages = [
       'Admire someone else\'s beauty without questioning your own.',
       'When we deny our emotions, we become a slave to them. It\'s only when we acknowledge them that we can put them in their rightful place.',
