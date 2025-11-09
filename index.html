@@ -3,10 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Inspirational Click Quotes</title>
+  <title>Inspirational Quotes dApp</title>
   <style>
     body {
       display: flex;
+      flex-direction: column;
       justify-content: center;
       align-items: center;
       height: 100vh;
@@ -21,6 +22,19 @@
       padding: 20px;
     }
 
+    #connectBtn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      background: #8000ff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 10px 16px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+
     #text {
       max-width: 90%;
       line-height: 1.4;
@@ -30,34 +44,45 @@
     }
 
     .show {
-      animation: fadeBounce 14s ease forwards;
+      animation: fadeBounce 4s ease forwards;
     }
 
     @keyframes fadeBounce {
-      0% {
-        opacity: 0;
-        transform: scale(0.7);
-      }
-      20% {
-        opacity: 1;
-        transform: scale(1.1);
-      }
-      40% {
-        transform: scale(1);
-      }
-      90% {
-        opacity: 1;
-      }
-      100% {
-        opacity: 0;
-      }
+      0% { opacity: 0; transform: scale(0.7); }
+      20% { opacity: 1; transform: scale(1.1); }
+      40% { transform: scale(1); }
+      90% { opacity: 1; }
+      100% { opacity: 0; }
     }
   </style>
 </head>
 <body>
-  <div id="text">Click anywhere to begin your inspiration ✨</div>
+  <button id="connectBtn">Connect Wallet</button>
+  <div id="text">Click anywhere to begin ✨ (cost: 0.0001 ETH)</div>
 
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js"></script>
   <script>
+    // ===== CONFIG =====
+    const RECEIVE_ADDRESS = "0x76A2a72470090dCc0A0C16D60bF7f5cD3238Ef8b";
+    const COST = "0.0001"; // ETH per click
+    // ==================
+
+    const colors = [
+      "#000000","#ffffff","#8000ff","#ff00ff",
+      "#0099ff","#39ff14","#ffff33"
+    ];
+
+    // Expanded font variety
+    const fonts = [
+      "Arial","Verdana","Tahoma","Trebuchet MS","Gill Sans","Helvetica",
+      "Courier New","Lucida Console","Georgia","Garamond","Times New Roman",
+      "Palatino","Bookman","Comic Sans MS","Impact","Copperplate","Brush Script MT",
+      "Futura","Century Gothic","Franklin Gothic Medium","Segoe UI","Optima",
+      "Candara","Monaco","Didot","Rockwell","Baskerville","Cambria","Consolas",
+      "Poppins","Raleway","Lato","Montserrat","Playfair Display","Dancing Script"
+    ];
+
+    // === QUOTES ===
     const messages = [
       'Admire someone else\'s beauty without questioning your own.',
       'When we deny our emotions, we become a slave to them. It\'s only when we acknowledge them that we can put them in their rightful place.',
@@ -152,34 +177,46 @@
       'The way we act determines how we feel way more often than the way we feel determines how we act. ~ Seth Godin.'
     ];
 
-    const fonts = [
-      "Arial", "Courier New", "Georgia", "Times New Roman", "Verdana",
-      "Comic Sans MS", "Impact", "Trebuchet MS"
-    ];
+    let provider, signer;
+    const text = document.getElementById("text");
+    const connectBtn = document.getElementById("connectBtn");
 
-    const colors = [
-      "#000000", // black
-      "#ffffff", // white
-      "#8000ff", // purple
-      "#ff00ff", // pink
-      "#0099ff", // blue
-      "#39ff14", // neon green
-      "#ffff33"  // neon yellow
-    ];
-
-    function randomColor(exclude) {
-      let color;
-      do {
-        color = colors[Math.floor(Math.random() * colors.length)];
-      } while (color === exclude);
-      return color;
+    async function connectWallet() {
+      if (!window.ethereum) { alert("MetaMask not found!"); return; }
+      provider = new ethers.BrowserProvider(window.ethereum);
+      await provider.send("eth_requestAccounts", []);
+      signer = await provider.getSigner();
+      const address = await signer.getAddress();
+      connectBtn.textContent = address.slice(0,6) + "..." + address.slice(-4);
+      connectBtn.style.background = "#39ff14";
     }
 
-    document.body.addEventListener("click", () => {
-      const text = document.getElementById("text");
+    connectBtn.onclick = connectWallet;
+
+    function randomColor(exclude) {
+      let c;
+      do { c = colors[Math.floor(Math.random()*colors.length)]; }
+      while (c === exclude);
+      return c;
+    }
+
+    async function showNewQuote() {
+      if (!signer) { alert("Connect wallet first!"); return; }
+
+      try {
+        const tx = await signer.sendTransaction({
+          to: RECEIVE_ADDRESS,
+          value: ethers.parseEther(COST)
+        });
+        console.log("TX:", tx.hash);
+      } catch (err) {
+        alert("Transaction cancelled or failed.");
+        return;
+      }
+
       const randomMessage = messages[Math.floor(Math.random() * messages.length)];
       const randomFont = fonts[Math.floor(Math.random() * fonts.length)];
-      const randomSize = Math.floor(Math.random() * 20) + 26; // 26–46px
+      const randomSize = Math.floor(Math.random() * 20) + 26;
       const bgColor = randomColor();
       const textColor = randomColor(bgColor);
 
@@ -190,8 +227,12 @@
       document.body.style.backgroundColor = bgColor;
 
       text.classList.remove("show");
-      void text.offsetWidth; // restart animation
+      void text.offsetWidth;
       text.classList.add("show");
+    }
+
+    document.body.addEventListener("click", e => {
+      if (e.target.id !== "connectBtn") showNewQuote();
     });
   </script>
 </body>
