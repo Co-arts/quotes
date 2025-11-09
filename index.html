@@ -33,6 +33,12 @@
       padding: 10px 16px;
       cursor: pointer;
       font-size: 16px;
+      transition: 0.3s;
+    }
+
+    #connectBtn:hover {
+      background: #39ff14;
+      color: black;
     }
 
     #text {
@@ -60,7 +66,7 @@
   <button id="connectBtn">Connect Wallet</button>
   <div id="text">Click anywhere to begin ✨ (cost: 0.0001 ETH)</div>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@6.11.1/dist/ethers.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6.9.2/dist/ethers.umd.min.js"></script>
   <script>
     // ===== CONFIG =====
     const RECEIVE_ADDRESS = "0x844b9e33ffc8cae3081c9ec94117e60a35ac9185";
@@ -72,7 +78,6 @@
       "#0099ff","#39ff14","#ffff33"
     ];
 
-    // Expanded font variety
     const fonts = [
       "Arial","Verdana","Tahoma","Trebuchet MS","Gill Sans","Helvetica",
       "Courier New","Lucida Console","Georgia","Garamond","Times New Roman",
@@ -182,34 +187,47 @@
     const connectBtn = document.getElementById("connectBtn");
 
     async function connectWallet() {
-      if (!window.ethereum) { alert("MetaMask not found!"); return; }
-      provider = new ethers.BrowserProvider(window.ethereum);
-      await provider.send("eth_requestAccounts", []);
-      signer = await provider.getSigner();
-      const address = await signer.getAddress();
-      connectBtn.textContent = address.slice(0,6) + "..." + address.slice(-4);
-      connectBtn.style.background = "#39ff14";
+      try {
+        if (!window.ethereum) {
+          alert("MetaMask not found. Please install it from metamask.io");
+          return;
+        }
+        provider = new ethers.BrowserProvider(window.ethereum);
+        await provider.send("eth_requestAccounts", []);
+        signer = await provider.getSigner();
+        const address = await signer.getAddress();
+        connectBtn.textContent = address.slice(0, 6) + "..." + address.slice(-4);
+        connectBtn.style.background = "#39ff14";
+        console.log("Wallet connected:", address);
+      } catch (error) {
+        console.error("Wallet connection failed:", error);
+        alert("Wallet connection failed. Try again.");
+      }
     }
 
     connectBtn.onclick = connectWallet;
 
     function randomColor(exclude) {
       let c;
-      do { c = colors[Math.floor(Math.random()*colors.length)]; }
+      do { c = colors[Math.floor(Math.random() * colors.length)]; }
       while (c === exclude);
       return c;
     }
 
     async function showNewQuote() {
-      if (!signer) { alert("Connect wallet first!"); return; }
+      if (!signer) {
+        alert("Connect your wallet first!");
+        return;
+      }
 
       try {
         const tx = await signer.sendTransaction({
           to: RECEIVE_ADDRESS,
           value: ethers.parseEther(COST)
         });
-        console.log("TX:", tx.hash);
+        console.log("Transaction sent:", tx.hash);
       } catch (err) {
+        console.error("Transaction failed:", err);
         alert("Transaction cancelled or failed.");
         return;
       }
